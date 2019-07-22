@@ -1,18 +1,23 @@
 package com.jwn.earthquakewatch.Activities.Activities;
 
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.fragment.app.FragmentActivity;
-
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.widget.Toast;
+import android.util.Log;
+import android.view.View;
+import android.webkit.WebView;
+import android.widget.Button;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -48,6 +53,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationManager locationManager;
     private LocationListener locationListener;
     private RequestQueue queue;
+    private AlertDialog.Builder dialogBuilder;
+    private AlertDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,19 +134,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
 
 
-            } /*else {
-                // we have permission!
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                assert location != null;
-                LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                mMap.addMarker(new MarkerOptions()
-                        .position(latLng)
-                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
-                        .title("Hello"));
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 8));
-
-            }*/
+            }
         }
 
 
@@ -216,6 +211,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
                             }
+
+
+
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -233,15 +231,143 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onInfoWindowClick(Marker marker) {
+        getQuakeDetails(marker.getTag().toString());
 
-        Toast.makeText(getApplicationContext(), marker.getTitle().toString(),Toast.LENGTH_LONG).show();
-
-    }
-
-    @Override
-    public void onPointerCaptureChanged(boolean hasCapture) {
+        //Toast.makeText(getApplicationContext(), marker.getTitle().toString(), Toast.LENGTH_LONG)
+         //.show();
 
     }
+
+    private void getQuakeDetails(String url) {
+
+
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url,null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+
+                        String detailsUrl= "";
+
+
+                        try {
+                            JSONObject properties = response.getJSONObject("properties");
+                            JSONObject products = properties.getJSONObject("products");
+                            JSONArray geoserve = products.getJSONArray("geoserve");
+
+                            for (int i = 0; i < geoserve.length(); i++) {
+                                JSONObject geoserveObj = geoserve.getJSONObject(i);
+
+                                JSONObject contentObj = geoserveObj.getJSONObject("contents");
+                                JSONObject geoJsonObj = contentObj.getJSONObject("geoserve.json");
+
+                                  detailsUrl = geoJsonObj.getString("url");
+
+
+                            }
+
+                            Log.d("URL: ", detailsUrl);
+
+                            getMoreDetails(detailsUrl);
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+
+        queue.add(jsonObjectRequest);
+    }
+
+   public void getMoreDetails(String url){
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url,null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+
+                        dialogBuilder = new AlertDialog.Builder(MapsActivity.this);
+                        View view = getLayoutInflater().inflate(R.layout.popup,null);
+
+                        Button dismissButton = view.findViewById(R.id.dismissPop);
+                        Button dismissButtonTop = view.findViewById(R.id.dismissPopTop);
+                        TextView popList = view.findViewById(R.id.popList);
+                        WebView htmlPop = (WebView) view.findViewById(R.id.htmlWebview );
+
+                        StringBuilder stringBuilder = new StringBuilder();
+
+
+                        try {
+
+                            if (response.has("tectonicSummary") && response.getString(
+                                    "tectonicSummary") != null) {
+                                JSONObject tectonic = response.getJSONObject("tectonicSummary");
+
+                                if (tectonic.has("text") && tectonic.getString("text") !=null) {
+
+                                    String text = tectonic.getString("text");
+
+                                    htmlPop.loadDataWithBaseURL(null, text, "text/html",
+                                            "UTF-8",null);
+                                }
+                            }
+
+                            JSONArray cities = response.getJSONArray("cities");
+
+                            for (int i = 0; i < cities.length(); i++) {
+
+                                JSONObject citiesObj = cities.getJSONObject(i);
+
+                                stringBuilder.append("City: " + citiesObj.getString("name")
+                                        + "\n" + "Distance: " + citiesObj.getString("distance")
+                                        + "\n" + "Population: "
+                                        + citiesObj.getString("population"));
+
+                                stringBuilder.append("\n\n");
+
+                            }
+
+
+                            popList.setText(stringBuilder);
+
+                            dismissButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    dialog.dismiss();
+                                }
+                            });
+
+                            dismissButtonTop.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    dialog.dismiss();
+                                }
+                            });
+
+                            dialogBuilder.setView(view);
+                            dialog = dialogBuilder.create();
+                            dialog.show();
+
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+
+            }
+        });
+
+            queue.add(jsonObjectRequest);
+
+   }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
