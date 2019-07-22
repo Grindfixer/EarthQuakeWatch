@@ -12,6 +12,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -28,6 +29,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.jwn.earthquakewatch.Activities.Model.EarthQuake;
+import com.jwn.earthquakewatch.Activities.UI.CustomInfoWindow;
 import com.jwn.earthquakewatch.Activities.Utils.Constants;
 import com.jwn.earthquakewatch.R;
 
@@ -39,7 +41,8 @@ import java.util.Date;
 
 import static com.jwn.earthquakewatch.Activities.Utils.Constants.URL;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback,
+        GoogleMap.OnInfoWindowClickListener, GoogleMap.OnMarkerClickListener {
 
     private GoogleMap mMap;
     private LocationManager locationManager;
@@ -77,6 +80,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+
+        mMap.setInfoWindowAdapter(new CustomInfoWindow(getApplicationContext()));
+        mMap.setOnInfoWindowClickListener(this);
+        mMap.setOnMarkerClickListener(this);
 
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         locationListener = new LocationListener() {
@@ -120,7 +127,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
 
 
-            } else {
+            } /*else {
                 // we have permission!
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
                 Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -132,7 +139,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         .title("Hello"));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 8));
 
-            }
+            }*/
         }
 
 
@@ -224,6 +231,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
 
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+
+        Toast.makeText(getApplicationContext(), marker.getTitle().toString(),Toast.LENGTH_LONG).show();
+
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        return false;
+    }
 }// end MapsActivity
 
 
