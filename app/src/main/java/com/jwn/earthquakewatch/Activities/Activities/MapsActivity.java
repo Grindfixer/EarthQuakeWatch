@@ -29,6 +29,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -55,6 +56,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private RequestQueue queue;
     private AlertDialog.Builder dialogBuilder;
     private AlertDialog dialog;
+    private BitmapDescriptor[] iconColors;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +66,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
+
+        iconColors = new BitmapDescriptor[] {
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE),
+                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
+        };
 
         queue = Volley.newRequestQueue(this);
 
@@ -186,7 +201,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 earthQuake.setPlace(properties.getString("place"));
                                 earthQuake.setType(properties.getString("type"));
                                 earthQuake.setTime(properties.getLong("time"));
-                                earthQuake.getMagnitude(properties.getDouble("mag"));
+                                earthQuake.setLat(lat);
+                                earthQuake.setLon(lon);
+                                earthQuake.setMagnitude(properties.getDouble("mag"));
                                 earthQuake.setDetailLink(properties.getString("detail"));
 
                                 java.text.DateFormat dateFormat =
@@ -197,10 +214,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                MarkerOptions markerOptions = new MarkerOptions();
 
-                               markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE));
+                              // markerOptions.icon(iconColors[Constants.randomInt(iconColors
+                                // .length, 0)]);//return a random number each time this runs
                                markerOptions.title(earthQuake.getPlace());
-                               markerOptions.position(new LatLng(lat, lon));
+                               markerOptions.position(new LatLng(earthQuake.getLat(), earthQuake.getLon()));
+
+
                                markerOptions.snippet("Magnitude: " + earthQuake.getMagnitude(properties.getDouble("mag")) + "\n" + "Date: " + formattedDate);
+
+
+                               //Add a circle to markers with mag > x
+                             /*   if (earthQuake.getMagnitude(properties.getDouble("mag")) >= 2.0) {
+                                    CircleOptions circleOptions = new CircleOptions();
+                                    circleOptions.center(new LatLng(earthQuake.getLat(),
+                                            earthQuake.getLon()));
+                                    circleOptions.radius(30000);
+                                    circleOptions.strokeWidth(3.6f);
+                                    circleOptions.fillColor(Color.RED);
+                                    markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+
+                                    mMap.addCircle(circleOptions);
+
+                                }*/
 
 
                                Marker marker = mMap.addMarker(markerOptions);

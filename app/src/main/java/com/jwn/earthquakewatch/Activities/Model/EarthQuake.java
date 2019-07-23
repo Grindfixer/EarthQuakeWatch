@@ -76,4 +76,6 @@ public class EarthQuake {
     public void setLon(double lon) {
         this.lon = lon;
     }
+
+
 }// end EarthQuake class
