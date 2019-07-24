@@ -2,7 +2,9 @@ package com.jwn.earthquakewatch.Activities.Activities;
 
 import android.Manifest;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -13,6 +15,7 @@ import android.view.View;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -31,10 +34,12 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.jwn.earthquakewatch.Activities.Model.EarthQuake;
+import com.jwn.earthquakewatch.Activities.QuakesListActivity;
 import com.jwn.earthquakewatch.Activities.UI.CustomInfoWindow;
 import com.jwn.earthquakewatch.Activities.Utils.Constants;
 import com.jwn.earthquakewatch.R;
@@ -57,6 +62,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private AlertDialog.Builder dialogBuilder;
     private AlertDialog dialog;
     private BitmapDescriptor[] iconColors;
+    private Button showListBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +73,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        showListBtn = findViewById(R.id.showListBtn);
+
+        showListBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(MapsActivity.this, QuakesListActivity.class));
+            }
+        });
+
+
         iconColors = new BitmapDescriptor[] {
                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE),
                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN),
@@ -75,7 +91,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA),
                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE),
                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN),
-                BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED),
+                //BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED),
                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE),
                 BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET)
         };
@@ -176,9 +192,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         final EarthQuake earthQuake = new EarthQuake();
 
-
-
-        final JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, URL,null,
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, URL,null,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -214,8 +228,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                MarkerOptions markerOptions = new MarkerOptions();
 
-                              // markerOptions.icon(iconColors[Constants.randomInt(iconColors
-                                // .length, 0)]);//return a random number each time this runs
+                              markerOptions.icon(iconColors[Constants.randomInt(iconColors
+                                 .length, 0)]);//return a random number each time this runs
                                markerOptions.title(earthQuake.getPlace());
                                markerOptions.position(new LatLng(earthQuake.getLat(), earthQuake.getLon()));
 
@@ -224,7 +238,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 
                                //Add a circle to markers with mag > x
-                             /*   if (earthQuake.getMagnitude(properties.getDouble("mag")) >= 2.0) {
+                                if (earthQuake.getMagnitude(properties.getDouble("mag")) >= 2.0) {
                                     CircleOptions circleOptions = new CircleOptions();
                                     circleOptions.center(new LatLng(earthQuake.getLat(),
                                             earthQuake.getLon()));
@@ -235,7 +249,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                     mMap.addCircle(circleOptions);
 
-                                }*/
+                                }
 
 
                                Marker marker = mMap.addMarker(markerOptions);
@@ -266,10 +280,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onInfoWindowClick(Marker marker) {
+        //get the needed JSON objects to get to the details (cities) response
         getQuakeDetails(marker.getTag().toString());
 
-        //Toast.makeText(getApplicationContext(), marker.getTitle().toString(), Toast.LENGTH_LONG)
-         //.show();
+
+        Toast.makeText(getApplicationContext(), marker.getTitle().toString(), Toast.LENGTH_LONG)
+         .show();
 
     }
 
@@ -330,7 +346,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         Button dismissButton = view.findViewById(R.id.dismissPop);
                         Button dismissButtonTop = view.findViewById(R.id.dismissPopTop);
                         TextView popList = view.findViewById(R.id.popList);
-                        WebView htmlPop = (WebView) view.findViewById(R.id.htmlWebview );
+                        WebView htmlPop =  view.findViewById(R.id.htmlWebview );
 
                         StringBuilder stringBuilder = new StringBuilder();
 
@@ -358,8 +374,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 stringBuilder.append("City: " + citiesObj.getString("name")
                                         + "\n" + "Distance: " + citiesObj.getString("distance")
-                                        + "\n" + "Population: "
-                                        + citiesObj.getString("population"));
+                                        + "\n" + "Population: " + citiesObj.getString("population"
+                                        + "\n" + "Latitude: " + citiesObj.getString("latitude")));
 
                                 stringBuilder.append("\n\n");
 
@@ -368,12 +384,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                             popList.setText(stringBuilder);
 
+
                             dismissButton.setOnClickListener(new View.OnClickListener() {
                                 @Override
                                 public void onClick(View view) {
                                     dialog.dismiss();
                                 }
                             });
+
 
                             dismissButtonTop.setOnClickListener(new View.OnClickListener() {
                                 @Override
