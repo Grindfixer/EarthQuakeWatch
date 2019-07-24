@@ -39,7 +39,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.jwn.earthquakewatch.Activities.Model.EarthQuake;
-import com.jwn.earthquakewatch.Activities.QuakesListActivity;
 import com.jwn.earthquakewatch.Activities.UI.CustomInfoWindow;
 import com.jwn.earthquakewatch.Activities.Utils.Constants;
 import com.jwn.earthquakewatch.R;
@@ -318,6 +317,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                             Log.d("URL: ", detailsUrl);
 
+                           // Toast.makeText(getApplicationContext(), detailsUrl, Toast.LENGTH_LONG)
+                              //      .show();
+
                             getMoreDetails(detailsUrl);
 
                         } catch (JSONException e) {
@@ -363,6 +365,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                     htmlPop.loadDataWithBaseURL(null, text, "text/html",
                                             "UTF-8",null);
+
+                                    Log.d("HTML: ",text);
                                 }
                             }
 
@@ -374,15 +378,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                                 stringBuilder.append("City: " + citiesObj.getString("name")
                                         + "\n" + "Distance: " + citiesObj.getString("distance")
-                                        + "\n" + "Population: " + citiesObj.getString("population"
-                                        + "\n" + "Latitude: " + citiesObj.getString("latitude")));
+                                        + "\n" + "Population: " + citiesObj.getString("population"));
 
                                 stringBuilder.append("\n\n");
+
+
 
                             }
 
 
+
                             popList.setText(stringBuilder);
+
+                            Log.d("Stringbuilder: ", String.valueOf(stringBuilder));
 
 
                             dismissButton.setOnClickListener(new View.OnClickListener() {

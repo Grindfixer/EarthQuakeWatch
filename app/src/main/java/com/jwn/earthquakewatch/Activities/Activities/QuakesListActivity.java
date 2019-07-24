@@ -1,4 +1,4 @@
-package com.jwn.earthquakewatch.Activities;
+package com.jwn.earthquakewatch.Activities.Activities;
 
 import android.os.Bundle;
 import android.view.View;
